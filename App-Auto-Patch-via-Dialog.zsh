@@ -78,8 +78,10 @@
 #
 #   Version 2.0.0b6, 10.23.2023 Robert Schroeder (@robjschroeder)
 #   - Added a function to create the App Auto-Patch directory, if it doesn't already exist. ( /Library/Application Support/AppAutoPatch )
-#   
-# 
+#
+#   Version 2.0.0b7, 10.23.2023 Robert Schroeder (@AndrewMBarnett)
+#   - Added a help message with variables for the update window. 
+#
 ####################################################################################################
 
 ####################################################################################################
@@ -96,13 +98,13 @@ scriptVersion="2.0.0b6"
 scriptFunctionalName="App Auto-Patch"
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 
-scriptLog="${4:-"/var/log/com.company.log"}"                                    # Parameter 4: Script Log Location [ /var/log/com.company.log ] (i.e., Your organization's default location for client-side logs)
+scriptLog="${4:-"/var/tmp/appautopatch.log"}"                                    # Parameter 4: Script Log Location [ /var/log/com.company.log ] (i.e., Your organization's default location for client-side logs)
 useOverlayIcon="${5:="true"}"                                                   # Parameter 5: Toggles swiftDialog to use an overlay icon [ true (default) | false ]
 interactiveMode="${6:="2"}"                                                     # Parameter 6: Interactive Mode [ 0 (Completely Silent) | 1 (Silent Discovery, Interactive Patching) | 2 (Full Interactive) ]
 ignoredLabels="${7:=""}"                                                        # Parameter 7: A space-separated list of Installomator labels to ignore (i.e., "firefox* zoomgov googlechromeenterprise nudge microsoft*")
 requiredLabels="${8:=""}"                                                       # Parameter 8: A space-separated list of required Installomator labels (i.e., "githubdesktop")
 outdatedOsAction="${9:-"/System/Library/CoreServices/Software Update.app"}"     # Parameter 9: Outdated OS Action [ /System/Library/CoreServices/Software Update.app (default) | jamfselfservice://content?entity=policy&id=117&action=view ] (i.e., Jamf Pro Self Service policy ID for operating system upgrades)
-unattendedExit="${10:-"false"}"                                                 # Parameter 10: Unattended Exit [ true | false (default) ]
+unattendedExit="${10:-"true"}"                                                 # Parameter 10: Unattended Exit [ true | false (default) ]
 unattendedExitSeconds="60"							                            # Number of seconds to wait until a kill Dialog command is sent
 swiftDialogMinimumRequiredVersion="2.3.2.4726"					                # Minimum version of swiftDialog required to use workflow
 
@@ -412,6 +414,21 @@ timestamp="$( date '+%Y-%m-%d-%H%M%S' )"
 dialogVersion=$( /usr/local/bin/dialog --version )
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# IT Support Variable
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+supportTeamName="Add IT Support"
+supportTeamPhone="Add IT Phone Number"
+supportTeamEmail="Add email"
+supportWebsite="Add IT Help site"
+#supportKB=""
+#supportTeamErrorKB=", and mention [${supportKB}](https://servicenow.company.com/support?id=kb_article_view&sysparm_article=${supportKB}#Failures)"
+#supportTeamHelpKB="\n- **Knowledge Base Article:** ${supportKB}"
+
+helpMessage="If you need assistance, please contact ${supportTeamName}:  \n- **Telephone:** ${supportTeamPhone}  \n- **Email:** ${supportTeamEmail}  \n- **Help Website:** ${supportWebsite}  \n\n**Computer Information:**  \n- **Operating System:**  $macOSproductVersion ($macOSbuildVersion)  \n- **Serial Number:** $serialNumber  \n- **Dialog:** $dialogVersion  \n- **Started:** $timestamp"
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Dialog path and Command Files
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -437,8 +454,9 @@ dialogListConfigurationOptions=(
     --button1disabled
     --height 500
     --width 650
-    --position bottomright
+    --position topright
     --progress
+    --helpmessage "$helpMessage"
     --infobox "#### Computer Name: #### \n\n $computerName \n\n #### macOS Version: #### \n\n $osVersion \n\n #### macOS Build: #### \n\n $osBuild "
     --infotext "${scriptVersion}"
     --liststyle compact
@@ -467,7 +485,7 @@ dialogWriteConfigurationOptions=(
     --commandfile "$dialogCommandFile"
     --moveable
     --mini
-    --position bottomright
+    --position topright
     --progress
     --progresstext "Scanning …"
     --quitkey k
